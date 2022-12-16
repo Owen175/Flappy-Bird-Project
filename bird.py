@@ -1,5 +1,5 @@
 class Bird:
-    def __init__(self, image, gravity, pos, mass, initVeloc=10, an1=None, an2=None):
+    def __init__(self, image, gravity, pos, mass, initVeloc=0, an1=None, an2=None):
         self.image = image
         self.an1 = an1
         self.an2 = an2
