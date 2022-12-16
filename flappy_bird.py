@@ -1,17 +1,9 @@
-import math
-import pygame as py
+#import pygame as py
 import time
 from bird import Bird
 from pipe import Pipe
 import random
-import sys
-import soundfile as sf
-import soundcard as sc
-import threading
-
-
-
-
+from config import *
 
 def checkKeys():
     global anTime
@@ -38,8 +30,7 @@ def checkKeys():
                             if e.key == py.K_p:
                                 paused = False
                                 py.mixer.music.unpause()
-                                t = oldt
-                                skipTime = time.time() - t
+                                skipTime = time.time() - oldt
                     py.display.update()
 
 
@@ -150,16 +141,20 @@ def main():
     flap = Bird(image=bd, gravity=gravity, pos=startPos, mass=30, initVeloc=initialVelocity, an1=an1, an2=an2)
     pipeList = newPipe(pipeList)
     drawPipe(pipeList[0])
+    lastTime = time.time()
+    deltaTime = 0.00001
 
     endGame = False
     intScore = 0
     loopCount = 0
+    cumulativeSkipTime = 0
     while cont(endGame):
         checkKeys()
-        lastTime = t + skipTime
+        lastTime = t
         t = time.time()
-        deltaTime = t - lastTime
+        deltaTime = t - lastTime - skipTime
         anTime -= deltaTime * anSpeed
+        cumulativeSkipTime += skipTime
         if anTime > 0.5:
             anFrame = an2
         elif anTime < 0:
@@ -183,13 +178,13 @@ def main():
         if abs(bseScroll) > bse.get_width():
             bseScroll = 0
         if regularPipeIntervals:
-            if pipeTime + minPipeInterval < t + skipTime:
+            if pipeTime + skipTime + minPipeInterval < t + skipTime:
                 pipeTime = t
                 pipeList = newPipe(pipeList)
         else:
-            if pipeTime + pipeInterval < t + skipTime:
+            if time.time() > pipeInterval + cumulativeSkipTime + pipeTime: # < time.time() + skipTime:
                 pipeList = newPipe(pipeList)
-                pipeTime = t
+                pipeTime = time.time()
                 pipeInterval = minPipeInterval / max(math.sqrt(random.random()), 0.5)
 
 
@@ -198,7 +193,7 @@ def main():
         for p in pipeList:
             drawPipe(p)
 
-        pos = (pos[0], FrameHeight - flap.frameChange((deltaTime) * timeMultiplier)[1])
+        pos = (pos[0], FrameHeight - flap.frameChange(deltaTime * timeMultiplier)[1])
         birdPosSet(pos, anFrame)
 
         birdEndPos = flap.pos[0] + flap.image.get_width()
@@ -252,89 +247,21 @@ def main():
         if exit:
             break
 
-with open('highScore.txt', 'r') as f:
-    AllTimeHS = int(f.read())
-    print(f'The all time High Score is {AllTimeHS}. Good luck!')
-
 py.init()
-wings = py.mixer.Sound('audio/wing.wav')
-die = py.mixer.Sound('audio/die.wav')
-point = py.mixer.Sound('audio/point.wav')
-themeTune = py.mixer.music.load('audio/theme_tune.mp3')
-
-
-clock = py.time.Clock()
-
-FrameHeight = 600
-FrameWidth = 900
 
 # PYGAME FRAME WINDOW
 py.display.set_caption("Flappy Bird V2")
 screen = py.display.set_mode((FrameWidth, FrameHeight))
 
-# IMAGE
-tn = py.image.load('sprites/black.png').convert()
-pipetop = py.image.load('sprites/pipetop.png').convert()
-pipebottom = py.image.load('sprites/pipebottom.png').convert()
-bg = py.image.load('sprites/background-night.png').convert()
-bse = py.image.load('sprites/ground.png').convert()
-bd = py.image.load('sprites/redbird-downflap.png').convert()
-an1 = py.image.load('sprites/redbird-midflap.png').convert()
-an2 = py.image.load('sprites/redbird-upflap.png').convert()
-gm_over = py.image.load('sprites/gameover.png').convert()
-
-# Removing the .convert removes the transparency
-zero = py.image.load('sprites/0.png').convert()
-one = py.image.load('sprites/1.png').convert()
-two = py.image.load('sprites/2.png').convert()
-three = py.image.load('sprites/3.png').convert()
-four = py.image.load('sprites/4.png').convert()
-five = py.image.load('sprites/5.png').convert()
-six = py.image.load('sprites/6.png').convert()
-seven = py.image.load('sprites/7.png').convert()
-eight = py.image.load('sprites/8.png').convert()
-nine = py.image.load('sprites/9.png').convert()
-
-bseHeight = bse.get_height()
-bgScroll = 0
-bseScroll = 0
-FPS = 150
-gravity = 100
-initialVelocity = 0
-startPos = (FrameWidth // 4, FrameHeight // 2)
-scoreDist = 25
-toggleMusic = False
-regularPipeIntervals = False
-soundOnPoint = False
-minPipeInterval = 1  # Seconds. Could be 2 if regularPipeIntervals is true.
-speed = 120
-mass = 70
-timeMultiplier = 3.5
-anSpeed = 6
-
-# CHANGE THE BELOW 1 TO UPPER NUMBER IF
-# BUFFERING OF THE IMAGE
-# HERE 1 IS THE CONSTANT FOR REMOVING BUFFERING
-tiles = math.ceil(FrameWidth / bg.get_width()) + 1
-tilesBse = math.ceil(FrameWidth / bse.get_width()) + 1
 t = time.time()
 clock.tick(33)
 
 
-highScore = 0
 if toggleMusic:
     py.mixer.music.play(-1)  # Repeats
 
-pipeInterval = minPipeInterval
 
 while True:
-    #    py.mixer.Sound.play(tune)
-    # for _ in range(2):
-    #     # cursor up one line
-    #     sys.stdout.write('\x1b[1A')
-    #
-    #     # delete last line
-    #     sys.stdout.write('\x1b[2K')
     print('Press Space to play.')
 
     scrollIm(bg, 0, 0, tiles)
@@ -352,4 +279,5 @@ while True:
                     contLoop = False
     main()
 
-#Randomise pipe interval
+# Remove the globals, and replace them with returns and parameters.
+# Pausing makes a new pipe appear
