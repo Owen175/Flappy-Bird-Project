@@ -1,9 +1,10 @@
-#import pygame as py
+# import pygame as py
 import time
 from bird import Bird
 from pipe import Pipe
 import random
 from config import *
+
 
 def checkKeys(brd, anTime, t, skipTime):
     oldt = t
@@ -34,6 +35,7 @@ def checkKeys(brd, anTime, t, skipTime):
                                 quit()
                     py.display.update()
     return anTime, skipTime
+
 
 def scrollIm(img, scroll, y, tls):
     i = 0
@@ -86,7 +88,6 @@ def removeOffScreen(pL):
 
 
 def displayScore(score, endG, coords=[30, 20], count=3):
-
     if score == 999:
         print('You won with a score of 999. Well done.')
         endG = True
@@ -123,8 +124,9 @@ def displayScore(score, endG, coords=[30, 20], count=3):
     return endG
 
 
-
 skipTime = 0
+
+
 def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
     initialVelocity = 0
     anTime = 0
@@ -184,7 +186,6 @@ def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
                 pipeTime = time.time()
                 pipeInterval = minPipeInterval / max(math.sqrt(random.random()), 0.5)
 
-
         shiftPipe(pipeList, pipeScroll)
         pipeList = removeOffScreen(pipeList)
         for p in pipeList:
@@ -206,13 +207,23 @@ def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
             intScore += additionToScore
             if additionToScore == 1 and soundOnPoint:
                 py.mixer.Sound.play(point)
+
             p1y = pair[0].pipeTop + pipetop.get_height()
             p2y = pair[1].pipeTop
-            flapRealPosy = FrameHeight - flap.pos[1]
-            if not (flapRealPosy > p1y and flapRealPosy + flap.image.get_height() < p2y):
-                birdX = flap.pos[0]
-                if birdX + flap.image.get_width() > pair[0].pipeStartPos and birdX < pair[0].pipeEndPos:
-                    endGame = True
+            # flap.pos = (flap.pos[0], FrameHeight-p2y)
+
+            for row in [flap.shape[0], flap.shape[2], flap.shape[4], flap.shape[6], flap.shape[12], flap.shape[14],
+                        flap.shape[16], flap.shape[20], flap.shape[23]]:
+                start = row[0]
+                start = [start[0] + flap.pos[0], start[1] + FrameHeight - flap.pos[1]]
+
+                flapRealPosy = start[1]  # FrameHeight-start[1]
+                if not (p1y < flapRealPosy < p2y):
+                    end = row[1]
+                    end = end[0] + flap.pos[0]
+
+                    if end > pair[0].pipeStartPos and start[0] < pair[0].pipeEndPos:
+                        endGame = True
 
         scrollIm(bse, bseScroll, FrameHeight - bse.get_height(), tilesBse)
         endGame = displayScore(intScore, endGame)
@@ -255,10 +266,8 @@ screen = py.display.set_mode((FrameWidth, FrameHeight))
 t = time.time()
 clock.tick(33)
 
-
 if toggleMusic:
     py.mixer.music.play(-1)  # Repeats
-
 
 while True:
     print('Press Space to play.')
@@ -279,6 +288,3 @@ while True:
                 if evt.key == py.K_q:
                     quit()
     highScore, AllTimeHS = main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval)
-
-# Remove the globals, and replace them with returns and parameters.
-# Perhaps a more accurate detection system pixel based rather than a square hitbox
