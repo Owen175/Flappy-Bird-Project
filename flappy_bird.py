@@ -5,20 +5,19 @@ from pipe import Pipe
 import random
 from config import *
 
-def checkKeys():
-    global anTime
-    global t
-    global skipTime
+def checkKeys(brd, anTime, t, skipTime):
     oldt = t
     for evt in py.event.get():
         if evt.type == py.QUIT:
             quit()
         if evt.type == py.KEYDOWN:
             if evt.key == py.K_SPACE:
-                flap.flap()
+                brd.flap()
                 anTime = 1
                 # for playing note.wav file
                 py.mixer.Sound.play(wings)
+            if evt.key == py.K_q:
+                quit()
             if evt.key == py.K_p:
                 paused = True
                 py.mixer.music.pause()
@@ -31,8 +30,10 @@ def checkKeys():
                                 paused = False
                                 py.mixer.music.unpause()
                                 skipTime = time.time() - oldt
+                            if e.key == py.K_q:
+                                quit()
                     py.display.update()
-
+    return anTime, skipTime
 
 def scrollIm(img, scroll, y, tls):
     i = 0
@@ -45,8 +46,8 @@ def birdPosSet(pos, img):
     screen.blit(img, (pos[0], pos[1]))
 
 
-def cont(end):
-    return flap.pos[1] >= bseHeight + flap.image.get_height() and not end
+def cont(end, brd):
+    return brd.pos[1] >= bseHeight + brd.image.get_height() and not end
 
 
 def newPipe(pL):
@@ -84,11 +85,11 @@ def removeOffScreen(pL):
     return finList
 
 
-def displayScore(score, coords=[30, 20], count=3):
-    global endgame
+def displayScore(score, endG, coords=[30, 20], count=3):
+
     if score == 999:
         print('You won with a score of 999. Well done.')
-        endgame = True
+        endG = True
     score = str(score)
     for _ in range(count - len(score)):
         score = '0' + score
@@ -119,21 +120,15 @@ def displayScore(score, coords=[30, 20], count=3):
 
     for i, dg in enumerate(digitList):
         screen.blit(dg, (scoreDist * i + coords[0], coords[1]))
+    return endG
+
+
 
 skipTime = 0
-def main():
-    global flap
-    global t
-    global bgScroll
-    global bseScroll
-    global anTime
-    global highScore
-    global endGame
-    global AllTimeHS
-    global pipeInterval
-    global skipTime
+def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
     initialVelocity = 0
     anTime = 0
+    skipTime = 0
     pos = startPos
     t = time.time()
     pipeList = []
@@ -148,19 +143,21 @@ def main():
     intScore = 0
     loopCount = 0
     cumulativeSkipTime = 0
-    while cont(endGame):
-        checkKeys()
+    while cont(endGame, flap):
+        anTime, skipTime = checkKeys(flap, anTime, t, skipTime)
         lastTime = t
         t = time.time()
         deltaTime = t - lastTime - skipTime
         anTime -= deltaTime * anSpeed
         cumulativeSkipTime += skipTime
         if anTime > 0.5:
-            anFrame = an2
-        elif anTime < 0:
-            anFrame = bd
-        else:
             anFrame = an1
+        elif anTime > 0:
+            anFrame = an2
+        elif anTime > -0.5:
+            anFrame = an1
+        else:
+            anFrame = bd
 
         if loopCount == 0:
             loopCount += 1
@@ -178,11 +175,11 @@ def main():
         if abs(bseScroll) > bse.get_width():
             bseScroll = 0
         if regularPipeIntervals:
-            if pipeTime + skipTime + minPipeInterval < t + skipTime:
+            if pipeTime + cumulativeSkipTime + minPipeInterval < time.time():
                 pipeTime = t
                 pipeList = newPipe(pipeList)
         else:
-            if time.time() > pipeInterval + cumulativeSkipTime + pipeTime: # < time.time() + skipTime:
+            if time.time() > pipeInterval + cumulativeSkipTime + pipeTime:
                 pipeList = newPipe(pipeList)
                 pipeTime = time.time()
                 pipeInterval = minPipeInterval / max(math.sqrt(random.random()), 0.5)
@@ -218,7 +215,7 @@ def main():
                     endGame = True
 
         scrollIm(bse, bseScroll, FrameHeight - bse.get_height(), tilesBse)
-        displayScore(intScore)
+        endGame = displayScore(intScore, endGame)
         clock.tick(FPS)  # Limits the FPS to the num
         py.display.update()
         skipTime = 0
@@ -243,9 +240,11 @@ def main():
                 quit()
             if event.type == py.KEYDOWN:
                 if event.key == py.K_r:
-                    exit = True
-        if exit:
-            break
+                    return highScore, AllTimeHS
+                if event.key == py.K_q:
+                    print(f'Session High Score was {highScore}')
+                    quit()
+
 
 py.init()
 
@@ -277,7 +276,9 @@ while True:
             if evt.type == py.KEYDOWN:
                 if evt.key == py.K_SPACE:
                     contLoop = False
-    main()
+                if evt.key == py.K_q:
+                    quit()
+    highScore, AllTimeHS = main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval)
 
 # Remove the globals, and replace them with returns and parameters.
-# Pausing makes a new pipe appear
+# Perhaps a more accurate detection system pixel based rather than a square hitbox

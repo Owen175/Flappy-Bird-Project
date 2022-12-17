@@ -48,7 +48,7 @@ gravity = 100
 initialVelocity = 0
 startPos = (FrameWidth // 4, FrameHeight // 2)
 scoreDist = 25
-toggleMusic = True
+toggleMusic = False
 soundOnPoint = False
 regularPipeIntervals = False  # False means that the intervals are randomised,
                               # however, there is a minimum to make it possible
