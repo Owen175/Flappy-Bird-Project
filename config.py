@@ -48,6 +48,7 @@ gravity = 100
 initialVelocity = 0
 startPos = (FrameWidth // 4, FrameHeight // 2)
 scoreDist = 25
+toggleSFX = True
 toggleMusic = False
 soundOnPoint = False
 regularPipeIntervals = False  # False means that the intervals are randomised,
@@ -60,7 +61,9 @@ timeMultiplier = 3.5  # Changes the speed that gravity acts on the bird
 anSpeed = 6  # Changes the animation speed
 
 # Don't Change ...
-
+if toggleSFX:
+    toggleMusic = True
+    soundOnPoint = True
 clock = py.time.Clock()
 highScore = 0
 pipeInterval = minPipeInterval
