@@ -16,9 +16,15 @@ class Pipe:
         self.pipeTop = pos[1]
         self.pipeBottom = pos[1] + self.pipeHeight
 
-    def checkForScore(self, xpos):
-        if xpos > self.pipeEndPos:
-            if self.count == 0:
-                self.count += 1
-                return 1
+    def checkForScore(self, xpos, pointWhenPassed):
+        if pointWhenPassed:
+            if xpos > self.pipeEndPos:
+                if self.count == 0:
+                    self.count += 1
+                    return 1
+        else:
+            if xpos > self.pipeStartPos:
+                if self.count == 0:
+                    self.count += 1
+                    return 1
         return 0

@@ -127,7 +127,7 @@ def displayScore(score, endG, coords=[30, 20], count=3):
 skipTime = 0
 
 
-def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
+def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval, pointWhenPassed):
     initialVelocity = 0
     anTime = 0
     skipTime = 0
@@ -203,7 +203,7 @@ def main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval):
                 pipePairs[(i - 1) // 2].append(p)
 
         for pair in pipePairs:
-            additionToScore = pair[0].checkForScore(flap.pos[0])
+            additionToScore = pair[0].checkForScore(flap.pos[0], pointWhenPassed)
             intScore += additionToScore
             if additionToScore == 1 and soundOnPoint:
                 py.mixer.Sound.play(point)
@@ -287,4 +287,4 @@ while True:
                     contLoop = False
                 if evt.key == py.K_q:
                     quit()
-    highScore, AllTimeHS = main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval)
+    highScore, AllTimeHS = main(bgScroll, bseScroll, highScore, AllTimeHS, pipeInterval, pointWhenPassed)
